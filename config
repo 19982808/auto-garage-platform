@@ -1,0 +1,12 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+[user]
+	name = Mercy Wambui
+	email = alainemercy376@gmail.com
+[remote "origin"]
+	url = https://github.com/19982808/auto-garage-platform-v2.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
