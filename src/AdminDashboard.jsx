@@ -1,43 +1,33 @@
-import { useEffect, useState } from "react"
-import { supabase } from "./lib/supabase"
+import { useEffect, useState } from "react";
+import { supabase } from "./lib/supabase";
 
-export default function AdminDashboard({ user, onLogout }) {
-  const [bookings, setBookings] = useState([])
-  const [users, setUsers] = useState([])
+export default function AdminDashboard({ user }) {
+  const [bookings, setBookings] = useState([]);
 
   const fetchAll = async () => {
-    const { data: b } = await supabase.from("bookings").select("*")
-    const { data: u } = await supabase.from("profiles").select("*")
+    const { data } = await supabase
+      .from("bookings")
+      .select("*")
+      .order("id", { ascending: false });
 
-    setBookings(b || [])
-    setUsers(u || [])
-  }
+    setBookings(data || []);
+  };
 
   useEffect(() => {
-    fetchAll()
-  }, [])
+    fetchAll();
+  }, []);
 
   return (
-    <div style={{ padding: 20, fontFamily: "Arial" }}>
-      <h1>👑 Admin Panel</h1>
+    <div style={{ padding: 30 }}>
+      <h2>Admin Panel</h2>
 
-      <button onClick={onLogout}>Logout</button>
-
-      <h2>Users</h2>
-      {users.map((u) => (
-        <div key={u.id}>
-          {u.email} — {u.role}
-        </div>
-      ))}
-
-      <h2>All Bookings</h2>
       {bookings.map((b) => (
-        <div key={b.id} style={{ border: "1px solid #ccc", margin: 10, padding: 10 }}>
+        <div key={b.id}>
           <p>{b.user_email}</p>
-          <p>{b.car_model}</p>
           <p>{b.service_type}</p>
+          <p>{b.ai_diagnosis}</p>
         </div>
       ))}
     </div>
-  )
+  );
 }
