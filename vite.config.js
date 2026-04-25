@@ -8,8 +8,8 @@ export default defineConfig({
   },
   preview: {
     host: true,
-    allowedHosts: [
-      "auto-garage-platform.onrender.com"
-    ]
+    port: process.env.PORT || 4173,
+    strictPort: true,
+    allowedHosts: true // 👈 THIS FIXES 403 COMPLETELY
   }
 })
