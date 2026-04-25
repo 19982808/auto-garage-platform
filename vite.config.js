@@ -1,15 +1,9 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
+export default {
   server: {
     host: true
   },
   preview: {
     host: true,
-    port: process.env.PORT || 4173,
-    strictPort: true,
-    allowedHosts: true // 👈 THIS FIXES 403 COMPLETELY
+    allowedHosts: ["auto-garage-platform.onrender.com"]
   }
-})
+}
