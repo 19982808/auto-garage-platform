@@ -1,249 +1,137 @@
-import { useEffect, useState } from "react"
-import { supabase } from "./lib/supabase"
+import { useEffect, useState } from "react";
+import { supabase } from "./lib/supabase";
 
 export default function Dashboard({ user, onLogout }) {
-  const [bookings, setBookings] = useState([])
-  const [issue, setIssue] = useState("")
-  const [aiResult, setAiResult] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [paymentStatus, setPaymentStatus] = useState("")
+  const [bookings, setBookings] = useState([]);
+  const [issue, setIssue] = useState("");
+  const [aiResult, setAiResult] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState("");
 
-  // 📦 FETCH BOOKINGS
+  // ✅ FETCH BOOKINGS (SAFE)
   const fetchBookings = async () => {
+    if (!user?.id) return;
+
     const { data, error } = await supabase
       .from("bookings")
       .select("*")
       .eq("user_id", user.id)
-      .order("id", { ascending: false })
+      .order("id", { ascending: false });
 
     if (error) {
-      console.error("FETCH ERROR:", error)
-      return
+      console.error("FETCH ERROR:", error);
+      return;
     }
 
-    setBookings(data || [])
-  }
+    setBookings(data || []);
+  };
 
   useEffect(() => {
-    fetchBookings()
-  }, [])
+    fetchBookings();
+  }, [user]);
 
-  // 🤖 AI DIAGNOSIS ENGINE (UPGRADED)
+  // 🤖 AI ANALYSIS
   const analyze = async () => {
-    if (!issue.trim()) return
+    if (!issue.trim()) return;
 
-    setLoading(true)
+    setLoading(true);
 
-    const text = issue.toLowerCase()
-    let result = ""
+    let result = "🧠 General diagnostic: full inspection recommended.";
+    const text = issue.toLowerCase();
 
     if (text.includes("shake") || text.includes("vibration")) {
-      result = "⚠️ Suspension or wheel alignment issue likely. High risk."
-    } 
-    else if (text.includes("brake") || text.includes("squeak")) {
-      result = "🔧 Brake pads worn. Replace soon."
-    } 
-    else if (text.includes("start") || text.includes("click")) {
-      result = "🔋 Battery or starter motor issue detected."
-    } 
-    else if (text.includes("smoke")) {
-      result = "🚨 Engine overheating or oil leak. Stop driving immediately."
-    } 
-    else if (text.includes("fuel")) {
-      result = "⛽ Fuel system or injector issue likely."
-    } 
-    else {
-      result = "🧠 General diagnostic: full inspection recommended."
+      result = "⚠️ Suspension or wheel alignment issue likely.";
+    } else if (text.includes("brake")) {
+      result = "🔧 Brake pads worn.";
+    } else if (text.includes("start")) {
+      result = "🔋 Battery issue.";
+    } else if (text.includes("smoke")) {
+      result = "🚨 Engine overheating.";
     }
 
-    setAiResult(result)
+    setAiResult(result);
 
-    // 💾 SAVE TO SUPABASE
+    // ✅ SAFE INSERT (NO CRASH IF COLUMN MISSING)
     const { error } = await supabase.from("bookings").insert([
       {
         user_id: user.id,
         user_email: user.email,
-        car_model: "AI DIAGNOSIS",
+        car_model: "AI",
         service_type: issue,
         date: new Date().toISOString(),
-        ai_diagnosis: result
-      }
-    ])
+        ai_diagnosis: result // ⚠️ remove if column doesn't exist
+      },
+    ]);
 
-    if (error) console.error("INSERT ERROR:", error)
+    if (error) console.error("INSERT ERROR:", error);
 
-    setIssue("")
-    fetchBookings()
-    setLoading(false)
-  }
+    setIssue("");
+    fetchBookings();
+    setLoading(false);
+  };
 
-  // 💳 PAYMENT SYSTEM (SIMULATED)
+  // 💳 PAYMENT (SAFE)
   const payForService = async () => {
-    setPaymentStatus("Processing payment...")
+    setPaymentStatus("Processing...");
 
-    try {
-      await new Promise((res) => setTimeout(res, 1500))
+    const { error } = await supabase.from("payments").insert([
+      {
+        user_id: user.id,
+        email: user.email,
+        amount: 500,
+        status: "paid",
+      },
+    ]);
 
-      await supabase.from("payments").insert([
-        {
-          user_id: user.id,
-          email: user.email,
-          amount: 500,
-          status: "paid",
-          created_at: new Date().toISOString()
-        }
-      ])
-
-      setPaymentStatus("✅ Payment successful!")
-
-    } catch (err) {
-      console.error(err)
-      setPaymentStatus("❌ Payment failed")
+    if (error) {
+      console.error(error);
+      setPaymentStatus("❌ Payment failed");
+      return;
     }
-  }
 
-  // 🎨 STYLES (ALL IN ONE FILE)
-  const styles = {
-    container: {
-      display: "flex",
-      fontFamily: "Arial",
-      minHeight: "100vh",
-      background: "#f6f7fb"
-    },
-    sidebar: {
-      width: "220px",
-      background: "#0f172a",
-      color: "white",
-      padding: "20px"
-    },
-    main: {
-      flex: 1,
-      padding: "30px"
-    },
-    card: {
-      background: "white",
-      padding: "20px",
-      borderRadius: "12px",
-      marginTop: "15px",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.08)"
-    },
-    input: {
-      width: "100%",
-      padding: "12px",
-      marginTop: "10px",
-      borderRadius: "8px",
-      border: "1px solid #ddd"
-    },
-    button: {
-      marginTop: "10px",
-      padding: "10px",
-      background: "#2563eb",
-      color: "white",
-      border: "none",
-      borderRadius: "8px",
-      cursor: "pointer"
-    },
-    logout: {
-      marginTop: "20px",
-      padding: "10px",
-      width: "100%",
-      background: "#ef4444",
-      color: "white",
-      border: "none",
-      borderRadius: "8px",
-      cursor: "pointer"
-    },
-    result: {
-      marginTop: "10px",
-      fontWeight: "bold",
-      color: "#16a34a"
-    },
-    booking: {
-      background: "white",
-      padding: "15px",
-      marginTop: "10px",
-      borderRadius: "10px",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
-    },
-    payBtn: {
-      marginTop: "10px",
-      padding: "10px",
-      background: "#16a34a",
-      color: "white",
-      border: "none",
-      borderRadius: "8px",
-      cursor: "pointer"
-    }
-  }
+    setPaymentStatus("✅ Payment successful");
+  };
 
   return (
-    <div style={styles.container}>
+    <div style={{ padding: 30 }}>
+      <h2>Dashboard</h2>
 
-      {/* SIDEBAR */}
-      <div style={styles.sidebar}>
-        <h2>🚗 Garage AI</h2>
-        <p style={{ fontSize: 12 }}>{user.email}</p>
+      <p>{user?.email}</p>
 
-        <button style={styles.logout} onClick={onLogout}>
-          Logout
-        </button>
-      </div>
+      <button onClick={onLogout}>Logout</button>
 
-      {/* MAIN */}
-      <div style={styles.main}>
+      <h3>AI Diagnosis</h3>
 
-        <h1>Dashboard</h1>
+      <input
+        value={issue}
+        onChange={(e) => setIssue(e.target.value)}
+        placeholder="Describe issue"
+      />
 
-        {/* AI CARD */}
-        <div style={styles.card}>
-          <h3>🧠 AI Car Diagnosis</h3>
+      <button onClick={analyze}>
+        {loading ? "Analyzing..." : "Analyze"}
+      </button>
 
-          <input
-            style={styles.input}
-            value={issue}
-            onChange={(e) => setIssue(e.target.value)}
-            placeholder="Describe your car issue..."
-          />
+      <button onClick={payForService}>
+        Pay KES 500
+      </button>
 
-          <button
-            style={styles.button}
-            onClick={analyze}
-            disabled={loading}
-          >
-            {loading ? "Analyzing..." : "Analyze"}
-          </button>
+      <p>{paymentStatus}</p>
 
-          <button style={styles.payBtn} onClick={payForService}>
-            Pay for Service (KES 500)
-          </button>
+      <p>{aiResult}</p>
 
-          {paymentStatus && (
-            <p style={{ marginTop: 10 }}>{paymentStatus}</p>
-          )}
+      <h3>Bookings</h3>
 
-          {aiResult && (
-            <div style={styles.result}>{aiResult}</div>
-          )}
-        </div>
-
-        {/* BOOKINGS */}
-        <h2 style={{ marginTop: 30 }}>📋 Your Bookings</h2>
-
-        {bookings.length === 0 ? (
-          <p>No bookings yet</p>
-        ) : (
-          bookings.map((b) => (
-            <div key={b.id} style={styles.booking}>
-              <p><b>Issue:</b> {b.service_type}</p>
-              <p><b>AI:</b> {b.ai_diagnosis}</p>
-              <p style={{ fontSize: 12, opacity: 0.6 }}>
-                {b.date}
-              </p>
-            </div>
-          ))
-        )}
-
-      </div>
+      {bookings.length === 0 ? (
+        <p>No bookings</p>
+      ) : (
+        bookings.map((b) => (
+          <div key={b.id}>
+            <p>{b.service_type}</p>
+            <p>{b.ai_diagnosis}</p>
+          </div>
+        ))
+      )}
     </div>
-  )
+  );
 }
